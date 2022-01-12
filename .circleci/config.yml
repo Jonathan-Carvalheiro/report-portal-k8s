@@ -1,0 +1,25 @@
+version: 2.1
+
+orbs:
+  cls: cls/base@5.0.4
+
+workflows:
+  compile_test_deploy:
+    jobs:
+      - cls/checkout_and_version:
+          write_sbt_version: true
+      - cls/helm_aws:
+          name: helm_lint
+          cmd: |
+            helm lint reportportal/
+          requires:
+            - cls/checkout_and_version
+      - cls/helm_aws:
+          name: helm_deploy_to_aws_integration
+          use_cluster: true
+          aws_profile: integration
+          cluster_name: cls-eks-cluster
+          context: clsAWS
+          requires:
+            - helm_lint
+          cmd: make all
